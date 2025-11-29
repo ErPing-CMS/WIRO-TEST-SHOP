@@ -1,0 +1,275 @@
+{% comment %}
+  Product Embroidery Section
+
+  Displays embroidery/monogramming customization options for products.
+  Only renders if embroidery is enabled via product metafield.
+
+  Accepts:
+  - product: {Object} - The product object (required)
+
+  Usage:
+  {% render 'product-embroidery', product: product %}
+{% endcomment %}
+
+{% liquid
+  assign embroidery_enabled = product.metafields.custom.embroidery_enabled
+  assign embroidery_options = product.metafields.custom.embroidery_options.value
+  assign character_limit = product.metafields.custom.embroidery_character_limit | default: 10
+  assign embroidery_image = product.metafields.custom.embroidery_image
+%}
+
+{% if embroidery_enabled and embroidery_options %}
+  <div class="product-embroidery tw-mt-8 tw-border-t tw-border-gray-200 tw-pt-8" data-embroidery-section>
+    <div class="tw-flex tw-items-start tw-gap-4 tw-mb-6">
+      <input
+        type="checkbox"
+        id="embroidery-checkbox"
+        name="properties[_embroidery_enabled]"
+        value="true"
+        class="tw-mt-1 tw-h-4 tw-w-4 tw-text-purple-600 tw-focus:ring-purple-500 tw-border-gray-300 tw-rounded"
+        data-embroidery-checkbox
+      >
+      <div class="tw-flex-1">
+        <label for="embroidery-checkbox" class="tw-text-base tw-font-medium tw-text-gray-900 tw-cursor-pointer">
+          Add Embroidered Name
+          <span class="tw-text-sm tw-font-normal tw-text-gray-600 tw-ml-2" data-embroidery-price-display>
+            +£{{ embroidery_options.base_price | default: 15 }}
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="embroidery-options tw-hidden tw-space-y-6" data-embroidery-options>
+      {% if embroidery_image %}
+        <div class="tw-mb-6">
+          <img
+            src="{{ embroidery_image | image_url: width: 400 }}"
+            srcset="{{ embroidery_image | image_url: width: 400 }} 1x, {{ embroidery_image | image_url: width: 800 }} 2x"
+            alt="{{ product.title }} embroidery preview"
+            class="tw-w-full tw-h-auto tw-rounded-lg tw-border tw-border-gray-200"
+            loading="lazy"
+            width="400"
+            height="400"
+          >
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="embroidery-text" class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-2">
+          Embroidered Name
+        </label>
+        <input
+          type="text"
+          id="embroidery-text"
+          name="properties[_embroidery_text]"
+          placeholder="Embroidered Name"
+          maxlength="{{ character_limit }}"
+          class="tw-w-full tw-px-3 tw-py-2 tw-border tw-border-gray-300 tw-rounded-md tw-shadow-sm tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-purple-500 tw-focus:border-purple-500"
+          data-embroidery-text
+          aria-describedby="embroidery-char-count"
+        >
+        <p class="tw-mt-1 tw-text-xs tw-text-gray-500" id="embroidery-char-count">
+          Add up to {{ character_limit }} characters.
+          <span class="tw-font-medium" data-char-count>0</span>/{{ character_limit }}
+        </p>
+      </div>
+
+      {% if embroidery_options.colors.size > 0 %}
+        <div>
+          <label class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+            Choose letter colour
+          </label>
+          <div class="tw-flex tw-gap-3 tw-flex-wrap">
+            {% for color_option in embroidery_options.colors %}
+              <label class="tw-relative tw-cursor-pointer">
+                <input
+                  type="radio"
+                  name="properties[_embroidery_color]"
+                  value="{{ color_option.value }}"
+                  class="tw-sr-only"
+                  data-embroidery-color
+                  data-color-price="{{ color_option.price | default: 0 }}"
+                  {% if forloop.first %}checked{% endif %}
+                >
+                <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
+                  <div
+                    class="tw-w-10 tw-h-10 tw-rounded-full tw-border-2 tw-transition-all tw-duration-200"
+                    style="background-color: {% if color_option.value == 'white' %}#ffffff{% elsif color_option.value == 'gold' %}#FFD700{% else %}{{ color_option.value }}{% endif %}; border-color: {% if forloop.first %}#000000{% else %}#e5e7eb{% endif %};"
+                    data-color-swatch
+                  ></div>
+                  <span class="tw-text-xs tw-text-gray-700">{{ color_option.name }}</span>
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if embroidery_options.fonts.size > 0 %}
+        <div>
+          <label class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+            Choose font
+          </label>
+          <div class="tw-flex tw-gap-3 tw-flex-wrap">
+            {% for font_option in embroidery_options.fonts %}
+              <label class="tw-relative tw-cursor-pointer">
+                <input
+                  type="radio"
+                  name="properties[_embroidery_font]"
+                  value="{{ font_option.value }}"
+                  class="tw-sr-only"
+                  data-embroidery-font
+                  data-font-price="{{ font_option.price | default: 0 }}"
+                  {% if forloop.first %}checked{% endif %}
+                >
+                <div
+                  class="tw-px-4 tw-py-2 tw-border-2 tw-rounded-md tw-transition-all tw-duration-200 tw-text-sm tw-font-medium"
+                  style="border-color: {% if forloop.first %}#000000{% else %}#e5e7eb{% endif %}; color: {% if forloop.first %}#000000{% else %}#6b7280{% endif %};"
+                  data-font-button
+                >
+                  {{ font_option.name }}
+                </div>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <p class="tw-text-xs tw-text-gray-500 tw-italic">
+        Unfortunately we can not accept returns or exchanges on embroidered items.
+      </p>
+
+      <input type="hidden" name="properties[_embroidery_price]" data-embroidery-price-input value="0">
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      if (typeof window.ProductEmbroidery === 'undefined') {
+        window.ProductEmbroidery = class {
+          constructor(containerEl) {
+            this.containerEl = containerEl;
+            this.checkboxEl = containerEl.querySelector('[data-embroidery-checkbox]');
+            this.optionsEl = containerEl.querySelector('[data-embroidery-options]');
+            this.textInputEl = containerEl.querySelector('[data-embroidery-text]');
+            this.charCountEl = containerEl.querySelector('[data-char-count]');
+            this.priceDisplayEl = containerEl.querySelector('[data-embroidery-price-display]');
+            this.priceInputEl = containerEl.querySelector('[data-embroidery-price-input]');
+            this.colorInputs = [...containerEl.querySelectorAll('[data-embroidery-color]')];
+            this.fontInputs = [...containerEl.querySelectorAll('[data-embroidery-font]')];
+            this.colorSwatches = [...containerEl.querySelectorAll('[data-color-swatch]')];
+            this.fontButtons = [...containerEl.querySelectorAll('[data-font-button]')];
+            
+            this.basePrice = {{ embroidery_options.base_price | default: 15 }};
+            this.characterLimit = {{ character_limit }};
+            
+            this.init();
+          }
+
+          init() {
+            if (!this.checkboxEl || !this.optionsEl) return;
+
+            this.checkboxEl.addEventListener('change', this.handleCheckboxChange.bind(this));
+            this.textInputEl?.addEventListener('input', this.handleTextInput.bind(this));
+            this.colorInputs.forEach(input => {
+              input.addEventListener('change', this.handleColorChange.bind(this));
+            });
+            this.fontInputs.forEach(input => {
+              input.addEventListener('change', this.handleFontChange.bind(this));
+            });
+
+            // Initialize state
+            this.updatePrice();
+          }
+
+          handleCheckboxChange(event) {
+            const isChecked = event.target.checked;
+            if (isChecked) {
+              this.optionsEl.classList.remove('tw-hidden');
+              this.optionsEl.setAttribute('aria-hidden', 'false');
+            } else {
+              this.optionsEl.classList.add('tw-hidden');
+              this.optionsEl.setAttribute('aria-hidden', 'true');
+              // Clear values when disabled
+              if (this.textInputEl) this.textInputEl.value = '';
+              this.updateCharCount();
+            }
+            this.updatePrice();
+          }
+
+          handleTextInput(event) {
+            this.updateCharCount();
+            this.updatePrice();
+          }
+
+          handleColorChange(event) {
+            const selectedIndex = this.colorInputs.findIndex(input => input.checked);
+            this.colorSwatches.forEach((swatch, index) => {
+              swatch.style.borderColor = index === selectedIndex ? '#000000' : '#e5e7eb';
+            });
+            this.updatePrice();
+          }
+
+          handleFontChange(event) {
+            const selectedIndex = this.fontInputs.findIndex(input => input.checked);
+            this.fontButtons.forEach((button, index) => {
+              button.style.borderColor = index === selectedIndex ? '#000000' : '#e5e7eb';
+              button.style.color = index === selectedIndex ? '#000000' : '#6b7280';
+            });
+            this.updatePrice();
+          }
+
+          updateCharCount() {
+            if (!this.textInputEl || !this.charCountEl) return;
+            const currentLength = this.textInputEl.value.length;
+            this.charCountEl.textContent = currentLength;
+            
+            if (currentLength >= this.characterLimit) {
+              this.charCountEl.classList.add('tw-text-red-600');
+            } else {
+              this.charCountEl.classList.remove('tw-text-red-600');
+            }
+          }
+
+          updatePrice() {
+            if (!this.checkboxEl?.checked) {
+              if (this.priceInputEl) this.priceInputEl.value = '0';
+              return;
+            }
+
+            let totalPrice = this.basePrice;
+            
+            const selectedColor = this.colorInputs.find(input => input.checked);
+            if (selectedColor) {
+              const colorPrice = parseFloat(selectedColor.dataset.colorPrice) || 0;
+              totalPrice += colorPrice;
+            }
+
+            const selectedFont = this.fontInputs.find(input => input.checked);
+            if (selectedFont) {
+              const fontPrice = parseFloat(selectedFont.dataset.fontPrice) || 0;
+              totalPrice += fontPrice;
+            }
+
+            if (this.priceInputEl) {
+              this.priceInputEl.value = (totalPrice * 100).toFixed(0); // Store in cents/pence
+            }
+
+            if (this.priceDisplayEl) {
+              this.priceDisplayEl.textContent = `+£${totalPrice.toFixed(2)}`;
+            }
+          }
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+          const embroiderySection = document.querySelector('[data-embroidery-section]');
+          if (embroiderySection) {
+            new window.ProductEmbroidery(embroiderySection);
+          }
+        });
+      }
+    })();
+  </script>
+{% endif %}
+

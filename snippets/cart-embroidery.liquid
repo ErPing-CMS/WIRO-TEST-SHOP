@@ -1,0 +1,409 @@
+{% comment %}
+  Cart Embroidery Section
+
+  Displays and allows editing of embroidery options for cart items.
+  Can add embroidery to items that don't have it, or edit existing embroidery.
+
+  Accepts:
+  - item: {Object} - The cart line item object (required)
+  - product: {Object} - The product object for the cart item (required)
+  - index: {Number} - The cart item index (required)
+
+  Usage:
+  {% render 'cart-embroidery', item: item, product: product, index: forloop.index0 %}
+{% endcomment %}
+
+{% liquid
+  assign embroidery_enabled = product.metafields.custom.embroidery_enabled
+  assign embroidery_options = product.metafields.custom.embroidery_options.value
+  assign character_limit = product.metafields.custom.embroidery_character_limit | default: 10
+  
+  assign has_embroidery = false
+  assign embroidery_text = ''
+  assign embroidery_color = ''
+  assign embroidery_font = ''
+  
+  if item.properties._embroidery_enabled == 'true'
+    assign has_embroidery = true
+    assign embroidery_text = item.properties._embroidery_text | default: ''
+    assign embroidery_color = item.properties._embroidery_color | default: ''
+    assign embroidery_font = item.properties._embroidery_font | default: ''
+  endif
+%}
+
+{% if embroidery_enabled and embroidery_options %}
+  <div class="cart-embroidery tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-200" data-cart-embroidery data-item-index="{{ index }}">
+    {% if has_embroidery %}
+      <div class="tw-flex tw-items-start tw-justify-between tw-gap-2 tw-mb-2">
+        <div class="tw-flex-1">
+          <p class="tw-text-sm tw-font-medium tw-text-gray-900">
+            Embroidered Name: "{{ embroidery_text }}", {{ embroidery_color | capitalize }}, {{ embroidery_font | capitalize }}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="tw-text-sm tw-text-purple-600 hover:tw-text-purple-800 tw-font-medium"
+          data-edit-embroidery
+          aria-label="Edit embroidery"
+        >
+          Edit
+        </button>
+      </div>
+    {% endif %}
+
+    <div class="embroidery-form {% unless has_embroidery %}tw-hidden{% endunless %}" data-embroidery-form>
+      <div class="tw-space-y-3">
+        <div class="tw-flex tw-items-start tw-gap-2">
+          <input
+            type="checkbox"
+            id="cart-embroidery-{{ index }}"
+            class="tw-mt-1 tw-h-4 tw-w-4 tw-text-purple-600 tw-focus:ring-purple-500 tw-border-gray-300 tw-rounded"
+            data-embroidery-checkbox
+            {% if has_embroidery %}checked{% endif %}
+          >
+          <div class="tw-flex-1">
+            <label for="cart-embroidery-{{ index }}" class="tw-text-sm tw-font-medium tw-text-gray-900 tw-cursor-pointer">
+              Add Embroidered Name
+              <span class="tw-text-xs tw-font-normal tw-text-gray-600 tw-ml-1" data-embroidery-price-display>
+                (+£{{ embroidery_options.base_price | default: 15 }})
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="embroidery-options tw-ml-6 tw-space-y-3 {% unless has_embroidery %}tw-hidden{% endunless %}" data-embroidery-options>
+          <div>
+            <label for="cart-embroidery-text-{{ index }}" class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-1">
+              Embroidered Name
+            </label>
+            <input
+              type="text"
+              id="cart-embroidery-text-{{ index }}"
+              class="tw-w-full tw-px-2 tw-py-1.5 tw-text-sm tw-border tw-border-gray-300 tw-rounded-md tw-shadow-sm tw-focus:outline-none tw-focus:ring-2 tw-focus:ring-purple-500 tw-focus:border-purple-500"
+              placeholder="Embroidered Name"
+              maxlength="{{ character_limit }}"
+              value="{{ embroidery_text }}"
+              data-embroidery-text
+              aria-describedby="cart-char-count-{{ index }}"
+            >
+            <p class="tw-mt-0.5 tw-text-xs tw-text-gray-500" id="cart-char-count-{{ index }}">
+              <span data-char-count>{{ embroidery_text.size }}</span>/{{ character_limit }} characters
+            </p>
+          </div>
+
+          {% if embroidery_options.colors.size > 0 %}
+            <div>
+              <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-2">
+                Letter colour
+              </label>
+              <div class="tw-flex tw-gap-2 tw-flex-wrap">
+                {% for color_option in embroidery_options.colors %}
+                  <label class="tw-relative tw-cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cart-embroidery-color-{{ index }}"
+                      value="{{ color_option.value }}"
+                      class="tw-sr-only"
+                      data-embroidery-color
+                      data-color-price="{{ color_option.price | default: 0 }}"
+                      {% if embroidery_color == color_option.value or forloop.first and embroidery_color == blank %}checked{% endif %}
+                    >
+                    <div class="tw-flex tw-flex-col tw-items-center tw-gap-1">
+                      <div
+                        class="tw-w-8 tw-h-8 tw-rounded-full tw-border-2 tw-transition-all tw-duration-200"
+                        style="background-color: {% if color_option.value == 'white' %}#ffffff{% elsif color_option.value == 'gold' %}#FFD700{% else %}{{ color_option.value }}{% endif %}; border-color: {% if embroidery_color == color_option.value or forloop.first and embroidery_color == blank %}#000000{% else %}#e5e7eb{% endif %};"
+                        data-color-swatch
+                      ></div>
+                      <span class="tw-text-xs tw-text-gray-700">{{ color_option.name }}</span>
+                    </div>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          {% if embroidery_options.fonts.size > 0 %}
+            <div>
+              <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-700 tw-mb-2">
+                Font
+              </label>
+              <div class="tw-flex tw-gap-2 tw-flex-wrap">
+                {% for font_option in embroidery_options.fonts %}
+                  <label class="tw-relative tw-cursor-pointer">
+                    <input
+                      type="radio"
+                      name="cart-embroidery-font-{{ index }}"
+                      value="{{ font_option.value }}"
+                      class="tw-sr-only"
+                      data-embroidery-font
+                      data-font-price="{{ font_option.price | default: 0 }}"
+                      {% if embroidery_font == font_option.value or forloop.first and embroidery_font == blank %}checked{% endif %}
+                    >
+                    <div
+                      class="tw-px-3 tw-py-1.5 tw-border-2 tw-rounded-md tw-transition-all tw-duration-200 tw-text-xs tw-font-medium"
+                      style="border-color: {% if embroidery_font == font_option.value or forloop.first and embroidery_font == blank %}#000000{% else %}#e5e7eb{% endif %}; color: {% if embroidery_font == font_option.value or forloop.first and embroidery_font == blank %}#000000{% else %}#6b7280{% endif %};"
+                      data-font-button
+                    >
+                      {{ font_option.name }}
+                    </div>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="tw-flex tw-gap-2 tw-pt-2">
+            <button
+              type="button"
+              class="tw-flex-1 tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-white tw-bg-purple-600 hover:tw-bg-purple-700 tw-rounded-md tw-transition-colors tw-duration-200"
+              data-save-embroidery
+            >
+              Save
+            </button>
+            {% if has_embroidery %}
+              <button
+                type="button"
+                class="tw-px-3 tw-py-2 tw-text-sm tw-font-medium tw-text-gray-700 tw-bg-white tw-border tw-border-gray-300 hover:tw-bg-gray-50 tw-rounded-md tw-transition-colors tw-duration-200"
+                data-remove-embroidery
+              >
+                Remove
+              </button>
+            {% endif %}
+          </div>
+
+          <p class="tw-text-xs tw-text-gray-500 tw-italic">
+            Unfortunately we can not accept returns or exchanges on embroidered items.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      if (typeof window.CartEmbroidery === 'undefined') {
+        window.CartEmbroidery = class {
+          constructor(containerEl, itemKey) {
+            this.containerEl = containerEl;
+            this.itemKey = itemKey;
+            this.itemIndex = containerEl.dataset.itemIndex;
+            this.checkboxEl = containerEl.querySelector('[data-embroidery-checkbox]');
+            this.optionsEl = containerEl.querySelector('[data-embroidery-options]');
+            this.formEl = containerEl.querySelector('[data-embroidery-form]');
+            this.textInputEl = containerEl.querySelector('[data-embroidery-text]');
+            this.charCountEl = containerEl.querySelector('[data-char-count]');
+            this.priceDisplayEl = containerEl.querySelector('[data-embroidery-price-display]');
+            this.colorInputs = [...containerEl.querySelectorAll('[data-embroidery-color]')];
+            this.fontInputs = [...containerEl.querySelectorAll('[data-embroidery-font]')];
+            this.colorSwatches = [...containerEl.querySelectorAll('[data-color-swatch]')];
+            this.fontButtons = [...containerEl.querySelectorAll('[data-font-button]')];
+            this.saveButton = containerEl.querySelector('[data-save-embroidery]');
+            this.removeButton = containerEl.querySelector('[data-remove-embroidery]');
+            this.editButton = containerEl.querySelector('[data-edit-embroidery]');
+            
+            this.basePrice = {{ embroidery_options.base_price | default: 15 }};
+            this.characterLimit = {{ character_limit }};
+            this.isEditing = false;
+            
+            this.init();
+          }
+
+          init() {
+            if (!this.checkboxEl) return;
+
+            this.checkboxEl.addEventListener('change', this.handleCheckboxChange.bind(this));
+            this.textInputEl?.addEventListener('input', this.handleTextInput.bind(this));
+            this.colorInputs.forEach(input => {
+              input.addEventListener('change', this.handleColorChange.bind(this));
+            });
+            this.fontInputs.forEach(input => {
+              input.addEventListener('change', this.handleFontChange.bind(this));
+            });
+            this.saveButton?.addEventListener('click', this.handleSave.bind(this));
+            this.removeButton?.addEventListener('click', this.handleRemove.bind(this));
+            this.editButton?.addEventListener('click', this.handleEdit.bind(this));
+
+            this.updatePrice();
+          }
+
+          handleCheckboxChange(event) {
+            const isChecked = event.target.checked;
+            if (isChecked) {
+              this.optionsEl.classList.remove('tw-hidden');
+              this.optionsEl.setAttribute('aria-hidden', 'false');
+            } else {
+              this.optionsEl.classList.add('tw-hidden');
+              this.optionsEl.setAttribute('aria-hidden', 'true');
+              if (this.textInputEl) this.textInputEl.value = '';
+              this.updateCharCount();
+            }
+            this.updatePrice();
+          }
+
+          handleTextInput(event) {
+            this.updateCharCount();
+            this.updatePrice();
+          }
+
+          handleColorChange(event) {
+            const selectedIndex = this.colorInputs.findIndex(input => input.checked);
+            this.colorSwatches.forEach((swatch, index) => {
+              swatch.style.borderColor = index === selectedIndex ? '#000000' : '#e5e7eb';
+            });
+            this.updatePrice();
+          }
+
+          handleFontChange(event) {
+            const selectedIndex = this.fontInputs.findIndex(input => input.checked);
+            this.fontButtons.forEach((button, index) => {
+              button.style.borderColor = index === selectedIndex ? '#000000' : '#e5e7eb';
+              button.style.color = index === selectedIndex ? '#000000' : '#6b7280';
+            });
+            this.updatePrice();
+          }
+
+          handleEdit(event) {
+            event.preventDefault();
+            this.isEditing = true;
+            this.formEl.classList.remove('tw-hidden');
+            this.editButton?.parentElement?.classList.add('tw-hidden');
+          }
+
+          async handleSave(event) {
+            event.preventDefault();
+            if (!this.checkboxEl?.checked) {
+              await this.updateCartItem({});
+              return;
+            }
+
+            const selectedColor = this.colorInputs.find(input => input.checked);
+            const selectedFont = this.fontInputs.find(input => input.checked);
+            const textValue = this.textInputEl?.value || '';
+
+            if (!textValue.trim()) {
+              alert('Please enter an embroidered name');
+              return;
+            }
+
+            const properties = {
+              '_embroidery_enabled': 'true',
+              '_embroidery_text': textValue,
+              '_embroidery_color': selectedColor?.value || '',
+              '_embroidery_font': selectedFont?.value || '',
+              '_embroidery_price': this.calculatePrice().toString()
+            };
+
+            await this.updateCartItem(properties);
+          }
+
+          async handleRemove(event) {
+            event.preventDefault();
+            await this.updateCartItem({});
+            this.checkboxEl.checked = false;
+            this.handleCheckboxChange({ target: this.checkboxEl });
+            this.isEditing = false;
+            this.formEl.classList.add('tw-hidden');
+            this.editButton?.parentElement?.classList.remove('tw-hidden');
+          }
+
+          async updateCartItem(properties) {
+            if (!this.itemKey) return;
+
+            try {
+              const response = await fetch('/cart/change.js', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  id: this.itemKey,
+                  properties: properties
+                })
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to update cart');
+              }
+
+              const cart = await response.json();
+              
+              // Trigger cart update event for other components
+              document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+              
+              // Reload cart drawer if it exists
+              if (typeof window.CartDrawer !== 'undefined' && window.CartDrawer.reload) {
+                window.CartDrawer.reload();
+              } else {
+                // Fallback: reload page
+                window.location.reload();
+              }
+            } catch (error) {
+              console.error('Error updating cart:', error);
+              alert('Failed to update embroidery. Please try again.');
+            }
+          }
+
+          calculatePrice() {
+            if (!this.checkboxEl?.checked) return 0;
+
+            let totalPrice = this.basePrice;
+            
+            const selectedColor = this.colorInputs.find(input => input.checked);
+            if (selectedColor) {
+              const colorPrice = parseFloat(selectedColor.dataset.colorPrice) || 0;
+              totalPrice += colorPrice;
+            }
+
+            const selectedFont = this.fontInputs.find(input => input.checked);
+            if (selectedFont) {
+              const fontPrice = parseFloat(selectedFont.dataset.fontPrice) || 0;
+              totalPrice += fontPrice;
+            }
+
+            return totalPrice;
+          }
+
+          updateCharCount() {
+            if (!this.textInputEl || !this.charCountEl) return;
+            const currentLength = this.textInputEl.value.length;
+            this.charCountEl.textContent = currentLength;
+            
+            if (currentLength >= this.characterLimit) {
+              this.charCountEl.classList.add('tw-text-red-600');
+            } else {
+              this.charCountEl.classList.remove('tw-text-red-600');
+            }
+          }
+
+          updatePrice() {
+            const price = this.calculatePrice();
+            if (this.priceDisplayEl) {
+              this.priceDisplayEl.textContent = `(+£${price.toFixed(2)})`;
+            }
+          }
+        };
+
+        // Initialize cart embroidery components
+        document.addEventListener('DOMContentLoaded', () => {
+          const initCartEmbroidery = () => {
+            const cartEmbroideryEls = document.querySelectorAll('[data-cart-embroidery]');
+            cartEmbroideryEls.forEach(el => {
+              const itemKey = el.closest('[data-cart-item]')?.dataset.cartItemKey || 
+                             el.closest('[data-line-item]')?.dataset.lineItemKey;
+              if (itemKey && !el.dataset.initialized) {
+                el.dataset.initialized = 'true';
+                new window.CartEmbroidery(el, itemKey);
+              }
+            });
+          };
+
+          initCartEmbroidery();
+          
+          // Re-initialize when cart updates
+          document.addEventListener('cart:updated', initCartEmbroidery);
+        });
+      }
+    })();
+  </script>
+{% endif %}
+

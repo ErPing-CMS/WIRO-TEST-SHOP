@@ -1,0 +1,38 @@
+{
+  "metafields": [
+    {
+      "namespace": "custom",
+      "key": "embroidery_enabled",
+      "name": "Embroidery Enabled",
+      "description": "Enable embroidery/monogramming option for this product",
+      "type": "boolean",
+      "owner_type": "product"
+    },
+    {
+      "namespace": "custom",
+      "key": "embroidery_character_limit",
+      "name": "Embroidery Character Limit",
+      "description": "Maximum number of characters allowed for embroidery text",
+      "type": "number_integer",
+      "owner_type": "product",
+      "default": 10
+    },
+    {
+      "namespace": "custom",
+      "key": "embroidery_image",
+      "name": "Embroidery Preview Image",
+      "description": "Product-specific image to show in embroidery section",
+      "type": "file_reference",
+      "owner_type": "product"
+    },
+    {
+      "namespace": "custom",
+      "key": "embroidery_options",
+      "name": "Embroidery Options",
+      "description": "JSON configuration for available colors, fonts, and pricing",
+      "type": "json",
+      "owner_type": "product"
+    }
+  ]
+}
+

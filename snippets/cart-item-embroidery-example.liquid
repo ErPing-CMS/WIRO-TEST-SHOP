@@ -1,0 +1,10 @@
+{% comment %}
+  Example integration of cart embroidery into cart drawer/item.
+  This shows how to include the embroidery snippet in your cart item template.
+  
+  Usage in cart drawer:
+  {% render 'cart-embroidery', item: item, product: item.product, index: forloop.index0 %}
+{% endcomment %}
+
+{% render 'cart-embroidery', item: item, product: item.product, index: forloop.index0 %}
+
