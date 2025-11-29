@@ -231,6 +231,8 @@
                               </li>
                             {%- endfor -%}
                           </ul>
+
+                          {%- render 'cart-embroidery', item: item, product: item.product, index: forloop.index0 -%}
                         </td>
 
                         <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
